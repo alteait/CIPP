@@ -36,14 +36,16 @@ jobs:
       - name: Checkout base (trusted validator script)
         uses: actions/checkout@v6
 
-      - name: Checkout PR head (untrusted, data only)
+      - name: Download PR head archive (untrusted, data only)
         if: github.event_name == 'pull_request_target'
-        uses: actions/checkout@v6
-        with:
-          repository: ${{ github.event.pull_request.head.repo.full_name }}
-          ref: ${{ github.event.pull_request.head.sha }}
-          path: pr
-          persist-credentials: false
+        env:
+          PR_REPO: ${{ github.event.pull_request.head.repo.full_name }}
+          PR_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          mkdir -p pr
+          curl -fsSL \
+            "https://codeload.github.com/${PR_REPO}/tar.gz/${PR_SHA}" \
+            | tar -xz --strip-components=1 -C pr
 
       - name: Validate JSON files
         id: validate
